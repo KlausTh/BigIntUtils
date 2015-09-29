@@ -16,40 +16,30 @@
 package net.itzgrund.bigintutils;
 
 import java.math.BigInteger;
+import static java.math.BigInteger.ONE;
+import static java.math.BigInteger.ZERO;
 import java.util.Arrays;
 
 /**
  * ROOT-Funtions for BigInteger
  * 
  * @author klaus@itzgrund.net
+ * @see https://en.wikipedia.org/wiki/Shifting_nth_root_algorithm
  */
 public final class Root {
-
-    public final static BigInteger ZERO = BigInteger.ZERO;
-    public final static BigInteger ONE = BigInteger.ONE;
-    public final static BigInteger TWO = new BigInteger("2");
-    public final static BigInteger THREE = new BigInteger("3");
-    public final static BigInteger FOUR = new BigInteger("4");
-    public final static BigInteger FIVE = new BigInteger("5");
-    public final static BigInteger SIX = new BigInteger("6");
-    public final static BigInteger MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE);
+    private final static BigInteger MASK_24BIT = new BigInteger("16777215");
 
     /**
      * 0 .. 255 filled field of BigIntegers for quick int to BigInteger
      * conversion
      */
-    public final static BigInteger[] toBig = new BigInteger[256];
+    final static BigInteger[] intToBig = new BigInteger[256];
 
     static {
-        toBig[0] = ZERO;
-        toBig[1] = ONE;
-        toBig[2] = TWO;
-        toBig[3] = THREE;
-        toBig[4] = FOUR;
-        toBig[5] = FIVE;
-        toBig[6] = SIX;
-        for (int i = 7; i < toBig.length; i++) {
-            toBig[i] = BigInteger.valueOf(i);
+        intToBig[0] = ZERO;
+        intToBig[1] = ONE;
+        for (int i = 2; i < intToBig.length; i++) {
+            intToBig[i] = BigInteger.valueOf(i);
         }
     }
 
@@ -65,8 +55,8 @@ public final class Root {
      * Test a number if it is definitly a square number. The method first calls
      * isProbableSquare() and then calls sqrtWithRest().
      * 
-     * @param x
-     * @return 
+     * @param x the number to test.
+     * @return true: x is a square number
      */
     public static boolean isSquare(BigInteger x) {
         return isProbableSquare(x)
@@ -75,7 +65,7 @@ public final class Root {
 
     /**
      * Test a number if it's possible a square. The Method looks for the last
-     * byte of x and compares it with BigMath.SQUARES.
+     * byte of x and search it in SQUARES.
      *
      * @param x number to test
      * @return true it may be a square number; false definitely not a sqare number
@@ -146,43 +136,43 @@ public final class Root {
             result = result.shiftLeft(8);
 
             bits = _byte_ & 192;
-            rest = rest.add(toBig[bits]);
-            resultplusbit = result.add(toBig[64]);
+            rest = rest.add(intToBig[bits]);
+            resultplusbit = result.add(intToBig[64]);
             result = result.shiftRight(1);
 
             if (rest.compareTo(resultplusbit) >= 0) {
                 rest = rest.subtract(resultplusbit);
-                result = result.add(toBig[64]);
+                result = result.add(intToBig[64]);
             }
 
             bits = _byte_ & 48;
-            rest = rest.add(toBig[bits]);
-            resultplusbit = result.add(toBig[16]);
+            rest = rest.add(intToBig[bits]);
+            resultplusbit = result.add(intToBig[16]);
             result = result.shiftRight(1);
 
             if (rest.compareTo(resultplusbit) >= 0) {
                 rest = rest.subtract(resultplusbit);
-                result = result.add(toBig[16]);
+                result = result.add(intToBig[16]);
             }
 
             bits = _byte_ & 12;
-            rest = rest.add(toBig[bits]);
-            resultplusbit = result.add(toBig[4]);
+            rest = rest.add(intToBig[bits]);
+            resultplusbit = result.add(intToBig[4]);
             result = result.shiftRight(1);
 
             if (rest.compareTo(resultplusbit) >= 0) {
                 rest = rest.subtract(resultplusbit);
-                result = result.add(toBig[4]);
+                result = result.add(intToBig[4]);
             }
 
             bits = _byte_ & 3;
-            rest = rest.add(toBig[bits]);
-            resultplusbit = result.add(toBig[1]);
+            rest = rest.add(intToBig[bits]);
+            resultplusbit = result.add(intToBig[1]);
             result = result.shiftRight(1);
 
             if (rest.compareTo(resultplusbit) >= 0) {
                 rest = rest.subtract(resultplusbit);
-                result = result.add(toBig[1]);
+                result = result.add(intToBig[1]);
             }
         }
 
@@ -224,13 +214,12 @@ public final class Root {
         BigInteger rest = BigInteger.ZERO;
         BigInteger yy, y = BigInteger.ZERO;
         BigInteger beta;
-        BigInteger bitsieve = BigInteger.valueOf( 16777215 );
 
-        int intervalle = (x.bitLength() - 1) / 24 + 1;
+        int intervals = (x.bitLength() - 1) / 24 + 1;
 
-        for (int i = intervalle - 1; i >= 0; i--) {
-            rest = rest.shiftLeft(24).add(x.shiftRight(i * 24).and(bitsieve));
-            yy = y.multiply(y).multiply(y).shiftLeft(24);
+        for (int i = intervals - 1; i >= 0; i--) {
+            rest = rest.shiftLeft(24).add(x.shiftRight(i * 24).and(MASK_24BIT));
+            yy = y.pow(3).shiftLeft(24);
             y = y.shiftLeft(8);
 
             beta = curtSearchBeta(y, rest, yy);
@@ -249,7 +238,7 @@ public final class Root {
     private static BigInteger curtSearchBeta(BigInteger y, BigInteger rest, BigInteger yy) {
         BigInteger beta1, beta2 = BigInteger.ZERO;
 
-        beta1 = beta2.add(toBig[128]);
+        beta1 = beta2.add(intToBig[128]);
         switch (y.add(beta1).pow(3).subtract(yy).compareTo(rest)) {
             case 0:
                 return beta1;
@@ -258,7 +247,7 @@ public final class Root {
                 break;
         }
 
-        beta2 = beta1.add(toBig[64]);
+        beta2 = beta1.add(intToBig[64]);
         switch (y.add(beta2).pow(3).subtract(yy).compareTo(rest)) {
             case 0:
                 return beta2;
@@ -267,7 +256,7 @@ public final class Root {
                 break;
         }
 
-        beta1 = beta2.add(toBig[32]);
+        beta1 = beta2.add(intToBig[32]);
         switch (y.add(beta1).pow(3).subtract(yy).compareTo(rest)) {
             case 0:
                 return beta1;
@@ -276,7 +265,7 @@ public final class Root {
                 break;
         }
 
-        beta2 = beta1.add(toBig[16]);
+        beta2 = beta1.add(intToBig[16]);
         switch (y.add(beta2).pow(3).subtract(yy).compareTo(rest)) {
             case 0:
                 return beta2;
@@ -285,7 +274,7 @@ public final class Root {
                 break;
         }
 
-        beta1 = beta2.add(toBig[8]);
+        beta1 = beta2.add(intToBig[8]);
         switch (y.add(beta1).pow(3).subtract(yy).compareTo(rest)) {
             case 0:
                 return beta1;
@@ -294,7 +283,7 @@ public final class Root {
                 break;
         }
 
-        beta2 = beta1.add(toBig[4]);
+        beta2 = beta1.add(intToBig[4]);
         switch (y.add(beta2).pow(3).subtract(yy).compareTo(rest)) {
             case 0:
                 return beta2;
@@ -303,7 +292,7 @@ public final class Root {
                 break;
         }
 
-        beta1 = beta2.add(toBig[2]);
+        beta1 = beta2.add(intToBig[2]);
         switch (y.add(beta1).pow(3).subtract(yy).compareTo(rest)) {
             case 0:
                 return beta1;
@@ -354,12 +343,12 @@ public final class Root {
         BigInteger rest = BigInteger.ZERO;
         BigInteger yy, y = BigInteger.ZERO;
         BigInteger alpha, beta;
-        BigInteger bitsieb = BigInteger.ONE.shiftLeft(nth * 8).subtract(BigInteger.ONE);
+        BigInteger bitsieve = BigInteger.ONE.shiftLeft(nth * 8).subtract(BigInteger.ONE);
 
         int intervalle = (x.bitLength() - 1) / (nth * 8) + 1;
 
         for (int i = intervalle - 1; i >= 0; i--) {
-            alpha = x.shiftRight(nth * i * 8).and(bitsieb);
+            alpha = x.shiftRight(nth * i * 8).and(bitsieve);
             rest = rest.shiftLeft(nth * 8).add(alpha);
             yy = y.pow(nth).shiftLeft(nth * 8);
             y = y.shiftLeft(8);
@@ -378,7 +367,7 @@ public final class Root {
     }
 
     private static BigInteger nthrootSearchBeta(int nth, BigInteger y, BigInteger rest, BigInteger yy) {
-        BigInteger bit = BigInteger.valueOf(128);
+        BigInteger bit = intToBig[128];
         BigInteger beta = BigInteger.ZERO;
 
         while (!bit.equals(BigInteger.ZERO)) {

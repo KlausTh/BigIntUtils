@@ -16,6 +16,8 @@
 package net.itzgrund.bigintutils;
 
 import java.math.BigInteger;
+import java.util.Optional;
+import java.util.stream.Stream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,30 +25,30 @@ import org.junit.Test;
 
 public class RootTest {
 
-    private final BigInteger n = new BigInteger("1234567890").shiftLeft(5000);
+    private final BigInteger bignumber = new BigInteger("1234567890").shiftLeft(5000);
     private final long[] cases = new long[]{ 1, 2, 3, 4, 5, 10, 555, 12345, 9876543210l, Long.MAX_VALUE };
 
     @Test
     public void isProbableSquare() {
-        for ( BigInteger bn : Root.toBig ) {
+        for ( BigInteger bn : Root.intToBig ) {
             String msg = bn.toString() + "ist eine Quadratzahl";
             assertTrue( msg, Root.isProbableSquare( bn.multiply( bn ) ) );
         }
         for ( int i : new int[] { 3,5,6,7,8,10,11,12,13,14,15,18,19,20,21 } ) {
             String msg = i + "ist keine Quadratzahl";
-            assertFalse( msg, Root.isProbableSquare( Root.toBig[ i ] ) );
+            assertFalse( msg, Root.isProbableSquare( Root.intToBig[ i ] ) );
         }
     }
 
     @Test
     public void isSquare() {
-        for ( BigInteger bn : Root.toBig ) {
+        for ( BigInteger bn : Root.intToBig ) {
             String msg = bn.toString() + "ist eine Quadratzahl";
             assertTrue( msg, Root.isSquare( bn.multiply( bn ) ) );
         }
         for ( int i : new int[] { 2,3,5,6,7,8,10,11,12,13,14,15,17,18,19,20,21 } ) {
             String msg = i + "ist keine Quadratzahl";
-            assertFalse( msg, Root.isSquare( Root.toBig[ i ] ) );
+            assertFalse( msg, Root.isSquare( Root.intToBig[ i ] ) );
         }
     }
 
@@ -60,11 +62,11 @@ public class RootTest {
             bii = bii.subtract(BigInteger.ONE);
             assertEquals("sqrt(" + bii + ") = ", bi, Root.sqrt(bii));
         }
-        assertEquals("sqrt(" + n + ") = ", n, Root.sqrt(n.pow(2)));
+        assertEquals("sqrt(" + bignumber + ") = ", bignumber, Root.sqrt(bignumber.pow(2)));
         
         assertEquals( new BigInteger( "16304" ), Root.sqrt( new BigInteger( "265847249" ) ) );
     }
-
+    
     @Test
     public void curt() {
         for (long i : cases) {
@@ -75,7 +77,7 @@ public class RootTest {
             bii = bii.subtract(BigInteger.ONE);
             assertEquals("curt(" + bii + ") = ", bi, Root.curt(bii));
         }
-        assertEquals("curt(" + n + ") = ", n, Root.curt(n.pow(3)));
+        assertEquals("curt(" + bignumber + ") = ", bignumber, Root.curt(bignumber.pow(3)));
     }
 
     @Test
@@ -90,6 +92,34 @@ public class RootTest {
                 assertEquals("nthroot(" + r + ", " + bii + ") = ", bi, Root.nthroot(r, bii));
             }
         }
-        assertEquals("nthroot(4," + n + ") = ", n, Root.nthroot(4, n.pow(4)));
+        assertEquals("nthroot(4," + bignumber + ") = ", bignumber, Root.nthroot(4, bignumber.pow(4)));
+    }
+
+    @Test(timeout = 10000)
+    public void performanceSqrt() {
+        String astring = "2530091250453673123200956554984833292296577462602233951305";
+        for (int i=0; i<11; i++)
+            astring = astring + astring;
+        BigInteger verybigint = new BigInteger(astring);
+        assertEquals(394590, verybigint.bitLength());
+
+        BigInteger[] result = Root.sqrtWithRest(verybigint);
+        assertEquals(197295, result[0].bitLength());
+        assertEquals(197294, result[1].bitLength());
+    }
+
+    @Test(timeout = 10000)
+    public void performanceIsSquareWithFermatFactorization() {
+        BigInteger factor1 = new BigInteger("25902137");
+        BigInteger factor2 = new BigInteger("74164229");
+        BigInteger product = factor1.multiply(factor2);
+        BigInteger start = Root.sqrtCeil(product);
+
+        Stream<BigInteger> fermat = Stream.iterate(start, n -> n.add(BigInteger.ONE))
+                .map(n -> n.pow(2).subtract(product))
+                .filter(n -> Root.isSquare(n));
+        
+        Optional<BigInteger> result = fermat.findAny();
+        assertTrue(result.isPresent());
     }
 }
