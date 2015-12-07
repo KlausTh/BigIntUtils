@@ -18,7 +18,6 @@ package net.itzgrund.bigintutils;
 import java.math.BigInteger;
 import static java.math.BigInteger.ONE;
 import static java.math.BigInteger.ZERO;
-import java.util.Arrays;
 
 /**
  * ROOT-Funtions for BigInteger
@@ -44,14 +43,6 @@ public final class Root {
     }
 
     /**
-     * all possible 8 bits little ending pattern for square numbers
-     */
-    private final static byte[] SQUARES = new byte[] {
-        -127, -124, -119, -112, -111, -103, -95, -92, -87, -79, -71, -63, -60,
-        -55, -47, -39, -31, -28, -23, -15, -7, 0, 1, 4, 9, 16, 17, 25, 33, 36,
-        41, 49, 57, 64, 65, 68, 73, 81, 89, 97, 100, 105, 113, 121};
-
-    /**
      * Test a number if it is definitly a square number. The method first calls
      * isProbableSquare() and then calls sqrtWithRest().
      * 
@@ -65,7 +56,7 @@ public final class Root {
 
     /**
      * Test a number if it's possible a square. The Method looks for the last
-     * byte of x and search it in SQUARES.
+     * 2 bits of x.
      *
      * @param x number to test
      * @return true it may be a square number; false definitely not a sqare number
@@ -73,10 +64,49 @@ public final class Root {
      */
     public static boolean isProbableSquare(BigInteger x) {
         byte[] bytes = x.toByteArray();
-        byte lastbyte = bytes[bytes.length - 1];
-        int index = Arrays.binarySearch(SQUARES, lastbyte);
+        
+        return isProbablySquare(bytes, bytes.length - 1);
+    }
 
-        return index >= 0;
+    private static boolean isProbablySquare(byte[] bytes, int index) {
+        byte bits = bytes[index];
+
+        switch (bits & 0b11) {
+        case 0b01: // check 101?
+            return (bits & 0b101) != 0b101;
+        case 0b10:
+        case 0b11:
+            return false;
+        }
+
+        switch (bits & 0b1100) {
+        case 0b0100: // 10100?
+            return (bits & 0b10100) != 0b10100;
+        case 0b1000:
+        case 0b1100:
+            return false;
+        }
+
+        switch (bits & 0b110000) {
+        case 0b010000: // 1010000?
+            return (bits & 0b1010000) != 0b1010000;
+        case 0b100000:
+        case 0b110000:
+            return false;
+        }
+
+        switch (bits & 0b11000000) {
+        case 0b01000000: // 1 01000000?
+            return (index == 0) || ((bytes[index-1] & 1) != 1);
+        case 0b10000000:
+        case 0b11000000:
+            return false;
+        }
+
+        if (index > 0)
+            return isProbablySquare(bytes, index - 1);
+        else
+            return true;
     }
 
     /**

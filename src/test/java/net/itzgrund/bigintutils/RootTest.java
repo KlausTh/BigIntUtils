@@ -16,8 +16,6 @@
 package net.itzgrund.bigintutils;
 
 import java.math.BigInteger;
-import java.util.Optional;
-import java.util.stream.Stream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -31,11 +29,11 @@ public class RootTest {
     @Test
     public void isProbableSquare() {
         for ( BigInteger bn : Root.intToBig ) {
-            String msg = bn.toString() + "ist eine Quadratzahl";
+            String msg = bn.toString() + "^2 is a square number";
             assertTrue( msg, Root.isProbableSquare( bn.multiply( bn ) ) );
         }
         for ( int i : new int[] { 3,5,6,7,8,10,11,12,13,14,15,18,19,20,21 } ) {
-            String msg = i + "ist keine Quadratzahl";
+            String msg = i + " isn't a square number";
             assertFalse( msg, Root.isProbableSquare( Root.intToBig[ i ] ) );
         }
     }
@@ -43,11 +41,11 @@ public class RootTest {
     @Test
     public void isSquare() {
         for ( BigInteger bn : Root.intToBig ) {
-            String msg = bn.toString() + "ist eine Quadratzahl";
+            String msg = bn.toString() + "^2 is a square number";
             assertTrue( msg, Root.isSquare( bn.multiply( bn ) ) );
         }
         for ( int i : new int[] { 2,3,5,6,7,8,10,11,12,13,14,15,17,18,19,20,21 } ) {
-            String msg = i + "ist keine Quadratzahl";
+            String msg = i + " isn't a square number";
             assertFalse( msg, Root.isSquare( Root.intToBig[ i ] ) );
         }
     }
@@ -95,31 +93,31 @@ public class RootTest {
         assertEquals("nthroot(4," + bignumber + ") = ", bignumber, Root.nthroot(4, bignumber.pow(4)));
     }
 
-    @Test(timeout = 10000)
-    public void performanceSqrt() {
-        String astring = "2530091250453673123200956554984833292296577462602233951305";
-        for (int i=0; i<11; i++)
-            astring = astring + astring;
-        BigInteger verybigint = new BigInteger(astring);
-        assertEquals(394590, verybigint.bitLength());
+//    @Test(timeout = 10000)
+//    public void performanceSqrt() {
+//        String astring = "2530091250453673123200956554984833292296577462602233951305";
+//        for (int i=0; i<11; i++)
+//            astring = astring + astring;
+//        BigInteger verybigint = new BigInteger(astring);
+//        assertEquals(394590, verybigint.bitLength());
+//
+//        BigInteger[] result = Root.sqrtWithRest(verybigint);
+//        assertEquals(197295, result[0].bitLength());
+//        assertEquals(197294, result[1].bitLength());
+//    }
 
-        BigInteger[] result = Root.sqrtWithRest(verybigint);
-        assertEquals(197295, result[0].bitLength());
-        assertEquals(197294, result[1].bitLength());
-    }
-
-    @Test(timeout = 10000)
-    public void performanceIsSquareWithFermatFactorization() {
-        BigInteger factor1 = new BigInteger("25902137");
-        BigInteger factor2 = new BigInteger("74164229");
-        BigInteger product = factor1.multiply(factor2);
-        BigInteger start = Root.sqrtCeil(product);
-
-        Stream<BigInteger> fermat = Stream.iterate(start, n -> n.add(BigInteger.ONE))
-                .map(n -> n.pow(2).subtract(product))
-                .filter(n -> Root.isSquare(n));
-        
-        Optional<BigInteger> result = fermat.findAny();
-        assertTrue(result.isPresent());
-    }
+//    @Test(timeout = 10000)
+//    public void performanceIsSquareWithFermatFactorization() {
+//        BigInteger factor1 = new BigInteger("25902137");
+//        BigInteger factor2 = new BigInteger("74164229");
+//        BigInteger product = factor1.multiply(factor2);
+//        BigInteger start = Root.sqrtCeil(product);
+//
+//        Stream<BigInteger> fermat = Stream.iterate(start, n -> n.add(BigInteger.ONE))
+//                .map(n -> n.pow(2).subtract(product))
+//                .filter(n -> Root.isSquare(n));
+//        
+//        Optional<BigInteger> result = fermat.findAny();
+//        assertTrue(result.isPresent());
+//    }
 }
