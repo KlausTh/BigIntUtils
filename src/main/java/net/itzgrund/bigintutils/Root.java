@@ -110,6 +110,108 @@ public final class Root {
     }
 
     /**
+     * Test a number if it's possible a cubic number. The Method looks for the last
+     * 3 bits of x.
+     *
+     * @param x number to test
+     * @return true it may be a square number; false definitely not a sqare number
+     * @see SQUARES
+     */
+    public static boolean isProbableCubic(BigInteger x) {
+        byte[] bytes = x.toByteArray();
+        
+        return isProbableCubic(bytes, bytes.length-1);
+    }
+    
+    private static boolean isProbableCubic(byte[] bytes, int index) {
+        short bits = (short)bytes[index];
+
+        switch (bits & 0b00000111) {
+            case 0b00000010:
+            case 0b00000100:
+            case 0b00000110:
+                return false;
+            case 0b00000000:
+                break;
+            default:
+                return true;
+        }
+        
+        switch (bits & 0b00111000) {
+            case 0b00010000:
+            case 0b00100000:
+            case 0b00110000:
+                return false;
+            case 0b00000000:
+                break;
+            default:
+                return true;
+        }
+        
+        if (index--==0)
+            return true;
+
+        bits |= ((short)bytes[index]) << 8;
+        bits >>>= 6; // 11111100
+        
+        switch (bits & 0b00000111) {
+            case 0b00000010:
+            case 0b00000100:
+            case 0b00000110:
+                return false;
+            case 0b00000000:
+                break;
+            default:
+                return true;
+        }
+        
+        switch (bits & 0b00111000) {
+            case 0b00010000:
+            case 0b00100000:
+            case 0b00110000:
+                return false;
+            case 0b00000000:
+                break;
+            default:
+                return true;
+        }
+        
+        if (index--==0)
+            return true;
+
+        bits >>>= 2;
+        bits |= ((short)bytes[index]) << 8;
+        bits >>>= 4; // 22221111
+        
+        switch (bits & 0b00000111) {
+            case 0b00000010:
+            case 0b00000100:
+            case 0b00000110:
+                return false;
+            case 0b00000000:
+                break;
+            default:
+                return true;
+        }
+        
+        switch (bits & 0b00111000) {
+            case 0b00010000:
+            case 0b00100000:
+            case 0b00110000:
+                return false;
+            case 0b00000000:
+                break;
+            default:
+                return true;
+        }
+        
+        if (index--==0)
+            return true;
+
+        return isProbableCubic(bytes, index);
+    }
+
+    /**
      * floor square root
      *
      * @param x positive number

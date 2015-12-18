@@ -49,6 +49,30 @@ public class RootTest {
             assertFalse( msg, Root.isSquare( Root.intToBig[ i ] ) );
         }
     }
+    
+    @Test
+    public void isProbableCubic() {
+        int[][] tests = new int[][] {
+            new int[] {0,65536},
+            new int[] {(1<<20) - 1000, (1<<20) + 1000},
+            new int[] {(1<<24) - 1000, (1<<24) + 1000},
+            new int[] {(1<<30) - 1000, (1<<30) + 1000}
+        };
+        
+        for (int[] intervall : tests) {
+            for (int i=intervall[0]; i<intervall[1]; i++) {
+                isProbableCubic(BigInteger.valueOf(i));
+            }
+        }
+    }
+
+    private void isProbableCubic(BigInteger n) {
+        if (!Root.isProbableCubic(n)) {
+            BigInteger[] result = Root.curtWithRest(n);
+            assertFalse(n+" is a cubic number of "+result[0]+"^3",
+                    result[1].equals(BigInteger.ZERO));
+        }
+    }
 
     @Test
     public void sqrt() {
