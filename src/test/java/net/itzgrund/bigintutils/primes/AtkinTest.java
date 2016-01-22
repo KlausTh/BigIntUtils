@@ -13,23 +13,34 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 */
-package net.itzgrund.bigintutils;
+package net.itzgrund.bigintutils.primes;
 
-import java.math.BigInteger;
+import net.itzgrund.bigintutils.Prime;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
-public class PrimesTest {
-
+public class AtkinTest {
     @Test
     public void shortValues() {
-        Object[] primes = Primes.getStream().limit(AtkinTest.PRIMES.length).toArray();
-        int i = 0;
-        long p;
+        Atkin atkin = new Atkin();
         
-        for (short should : AtkinTest.PRIMES) {
-            p = ((BigInteger)primes[i++]).longValue();
+        for (int should : ShortPrimes.NUM) {
+            long p = atkin.next();
             assertEquals(p+" != "+should, (long)should, p);
         }
+    }
+    
+    @Test
+    public void intValues() {
+        Atkin atkin = new Atkin();
+        long p1;
+        long size = Integer.MAX_VALUE;
+        long count = 0;
+        do {
+            p1 = atkin.next();
+            count++;
+        } while (p1 < (size));
+        
+        assertEquals(Prime.PI_2E31,count);
     }
 }
